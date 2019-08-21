@@ -1,4 +1,4 @@
-module k8s-discovery
+module https: //github.com/gkarthiks/k8s-discovery
 
 go 1.12
 
