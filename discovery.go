@@ -14,8 +14,8 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 )
 
-type k8s struct {
-	clientset kubernetes.Interface
+type K8s struct {
+	Clientset kubernetes.Interface
 }
 
 // NewK8s will provide a new k8s client interface
@@ -23,7 +23,7 @@ type k8s struct {
 // While running outside of the cluster, tries to make use of the kubeconfig file
 // While running inside the cluster resolved via pod environment uses the in-cluster config
 func NewK8s() (*k8s, error) {
-	client := k8s{}
+	client := K8s{}
 	if _, inCluster := os.LookupEnv("KUBERNETES_SERVICE_HOST"); inCluster == true {
 		log.Info("Program running inside the cluster, picking the in-cluster configuration")
 
@@ -31,7 +31,7 @@ func NewK8s() (*k8s, error) {
 		if err != nil {
 			return nil, err
 		}
-		client.clientset, err = kubernetes.NewForConfig(config)
+		client.Clientset, err = kubernetes.NewForConfig(config)
 		if err != nil {
 			return nil, err
 		}
@@ -50,7 +50,7 @@ func NewK8s() (*k8s, error) {
 	if err != nil {
 		return nil, err
 	}
-	client.clientset, err = kubernetes.NewForConfig(config)
+	client.Clientset, err = kubernetes.NewForConfig(config)
 	if err != nil {
 		return nil, err
 	}
@@ -65,8 +65,8 @@ func homeDir() string {
 }
 
 // GetVersion returns the version of the kubernetes cluster that is running
-func (o *k8s) GetVersion() (string, error) {
-	version, err := o.clientset.Discovery().ServerVersion()
+func (o *K8s) GetVersion() (string, error) {
+	version, err := o.Clientset.Discovery().ServerVersion()
 	if err != nil {
 		return "", err
 	}
