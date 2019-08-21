@@ -15,6 +15,14 @@ go get github.com/gkarthiks/k8s-discovery
 
 Declare a variable as `var k8s *discovery.K8s` and initialize it as `k8s, _ = discovery.NewK8s()`. Now the **k8s** will hold the interface that will provide the clientset for Kubernetes communication that is pulled either via `in-cluster` or via `kubeconfig` file.
 
+## Available APIs at the moment
+
+<b>NewK8s:</b> Will return a new kubernetes clientset's interface that is formulated either via in-cluster configuration or kubeconfog file.
+
+<b>GetVersion:</b> Queries the Kubernetes for the version in `v0.0.0-master+$Format:%h$`
+
+<b>GetNamespace:</b> Gets the namespace of the running pod if running inside the cluster, if outside returns based on the `POD_NAMESPACE` environment variable. This environment variable also takes precedence if provided in a pod.
+
 
 ## Example
 ```go
