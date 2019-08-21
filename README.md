@@ -1,5 +1,7 @@
 ## k8s-discovery
 
+![](go-k8s.png)
+
 *K8s Discovery*, is an effort to reduce the boiler plate code for the [client-go](https://github.com/kubernetes/client-go) or kubernetes based cloud native [GoLang](https://golang.org) developers.
 
 The main aspect of this is around saving and cleaning the code for in-cluster and out-cluster configurations. 
