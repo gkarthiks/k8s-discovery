@@ -22,7 +22,7 @@ type K8s struct {
 // resolves where it is running whether inside the kubernetes cluster or outside
 // While running outside of the cluster, tries to make use of the kubeconfig file
 // While running inside the cluster resolved via pod environment uses the in-cluster config
-func NewK8s() (*k8s, error) {
+func NewK8s() (*K8s, error) {
 	client := K8s{}
 	if _, inCluster := os.LookupEnv("KUBERNETES_SERVICE_HOST"); inCluster == true {
 		log.Info("Program running inside the cluster, picking the in-cluster configuration")
