@@ -8,9 +8,9 @@ import (
 	"k8s.io/client-go/kubernetes/fake"
 )
 
-func newTestSimpleK8s() *k8s {
-	client := k8s{}
-	client.clientset = fake.NewSimpleClientset()
+func newTestSimpleK8s() *K8s {
+	client := K8s{}
+	client.Clientset = fake.NewSimpleClientset()
 	return &client
 }
 
@@ -27,8 +27,9 @@ func TestGetVersionDefault(t *testing.T) {
 }
 
 func TestGetNamespace(t *testing.T) {
+	k8s := newTestSimpleK8s()
 	os.Setenv("POD_NAMESPACE","default")
-	ns, err := GetNamespace()
+	ns, err := k8s.GetNamespace()
 	if err != nil {
 		t.Error("Expected result is default")
 	}
