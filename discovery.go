@@ -77,7 +77,7 @@ func (o *K8s) GetVersion() (string, error) {
 // GetNamespace will return the current namespace for the running program
 // Checks for the user passed ENV variable POD_NAMESPACE if not available
 // pulls the namespace from pod, if not returns ""
-func GetNamespace() (string, error) {
+func (o *K8s) GetNamespace() (string, error) {
 	if ns := os.Getenv("POD_NAMESPACE"); ns != "" {
 		return ns, nil
 	}
