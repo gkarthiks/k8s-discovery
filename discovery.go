@@ -9,13 +9,16 @@ import (
 	"strings"
 
 	log "github.com/sirupsen/logrus"
-	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/rest"
-	"k8s.io/client-go/tools/clientcmd"
+	coreClient "k8s.io/client-go/kubernetes"
+	restClient "k8s.io/client-go/rest"
+	cmdClient "k8s.io/client-go/tools/clientcmd"
+	metricsClient "k8s.io/metrics/pkg/client/clientset/versioned"
 )
 
 type K8s struct {
-	Clientset kubernetes.Interface
+	Clientset coreClient.Interface
+	MetricsClientSet   *metricsClient.Clientset
+
 }
 
 // NewK8s will provide a new k8s client interface
@@ -27,11 +30,11 @@ func NewK8s() (*K8s, error) {
 	if _, inCluster := os.LookupEnv("KUBERNETES_SERVICE_HOST"); inCluster == true {
 		log.Info("Program running inside the cluster, picking the in-cluster configuration")
 
-		config, err := rest.InClusterConfig()
+		config, err := restClient.InClusterConfig()
 		if err != nil {
 			return nil, err
 		}
-		client.Clientset, err = kubernetes.NewForConfig(config)
+		client.Clientset, err = coreClient.NewForConfig(config)
 		if err != nil {
 			return nil, err
 		}
@@ -46,14 +49,20 @@ func NewK8s() (*K8s, error) {
 		kubeconfig = flag.String("kubeconfig", "", "absolute path to the kubeconfig file")
 	}
 	flag.Parse()
-	config, err := clientcmd.BuildConfigFromFlags("", *kubeconfig)
+	config, err := cmdClient.BuildConfigFromFlags("", *kubeconfig)
 	if err != nil {
 		return nil, err
 	}
-	client.Clientset, err = kubernetes.NewForConfig(config)
+	client.Clientset, err = coreClient.NewForConfig(config)
 	if err != nil {
 		return nil, err
 	}
+
+	client.MetricsClientSet, err = metricsClient.NewForConfig(config)
+	if err != nil {
+		panic(err)
+	}
+
 	return &client, nil
 }
 
