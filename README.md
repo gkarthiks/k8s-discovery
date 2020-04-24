@@ -25,17 +25,23 @@ Declare a variable as `var k8s *discovery.K8s` and initialize it as `k8s, _ = di
 
 <b>GetNamespace:</b> Gets the namespace of the running pod if running inside the cluster, if outside returns based on the `POD_NAMESPACE` environment variable. This environment variable also takes precedence if provided in a pod.
 
+## Available client
+*K8s Discovery* provides the client set for kubernetes client with hassle free configuration as well as the metrics client. The new addition `MetricsClientSet` can be used to query the metrics against the containers.
+
 
 ## Example
 ```go
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
+	"strconv"
 
 	discovery "github.com/gkarthiks/k8s-discovery"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	metricsTypes "k8s.io/metrics/pkg/apis/metrics/v1beta1"
 )
 
 var (
@@ -48,12 +54,47 @@ func main() {
 	version, _ := k8s.GetVersion()
 	fmt.Printf("Specified Namespace: %s\n", namespace)
 	fmt.Printf("Version of running Kubernetes: %s\n", version)
-	cronJobs, err := k8s.Clientset.BatchV1beta1().CronJobs(namespace).List(metav1.ListOptions{})
+	
+	
+	
+	
+	cronJobs, err := k8s.Clientset.BatchV1beta1().CronJobs(namespace).List(context.Background(), metav1.ListOptions{})
 	if err != nil {
 		log.Panic(err.Error())
 	}
 	for idx, crons := range cronJobs.Items {
 		fmt.Printf("%d -> %s\n", idx, crons.Name)
 	}
+	
+	
+	
+	
+	fmt.Println("==== Moving towards the metrics query ====")
+	
+	podMetrics, err := k8s.MetricsClientSet.MetricsV1beta1().PodMetricses(namespace).List(context.Background(), metav1.ListOptions{})
+	if err != nil {
+		panic(err)
+	}
+
+	var podMetric metricsTypes.PodMetrics
+	getPodUsageMetrics := func(pod metricsTypes.PodMetrics) {
+		for _, container := range pod.Containers {
+			cpuQuantityDec := container.Usage.Cpu().AsDec().String()
+			cpuUsageFloat, _ := strconv.ParseFloat(cpuQuantityDec, 64)
+
+			fmt.Printf( "CPU Usage Float: %v\n", cpuUsageFloat)
+
+			memoryQuantityDec := container.Usage.Memory().AsDec().String()
+			memoryUsageFloat, _ := strconv.ParseFloat(memoryQuantityDec, 64)
+			fmt.Printf("Memory Usage Float: %v\n\n", memoryUsageFloat)
+		}
+	}
+
+	for _, podMetric = range podMetrics.Items {
+		getPodUsageMetrics(podMetric)
+	}
+	
+	
+	
 }
 ```
