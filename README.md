@@ -98,3 +98,21 @@ func main() {
 	
 }
 ```
+
+### Note:
+
+For GCP or managed kubernetes, you have to import the `auth` module, else an error message stating `no Auth Provider found for name "gcp"` will be thrown. The import looks like the below for the sampe program.
+
+```golang
+import (
+	"context"
+	"fmt"
+	"log"
+	"strconv"
+
+	discovery "github.com/gkarthiks/k8s-discovery"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	metricsTypes "k8s.io/metrics/pkg/apis/metrics/v1beta1"
+	_ "k8s.io/client-go/plugin/pkg/client/auth"
+)
+```
