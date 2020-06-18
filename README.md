@@ -101,7 +101,7 @@ func main() {
 
 ### Note:
 
-For GCP or managed kubernetes, you have to import the `auth` module, else an error message stating `no Auth Provider found for name "gcp"` will be thrown. The import looks like the below for the sampe program.
+For GCP or managed kubernetes, you have to import the `auth` module, else an error message stating `no Auth Provider found for name "gcp"` will be thrown. The import looks like the below for the sample program. Special mention @ringods.
 
 ```golang
 import (
