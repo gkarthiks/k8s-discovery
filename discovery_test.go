@@ -28,7 +28,7 @@ func TestGetVersionDefault(t *testing.T) {
 
 func TestGetNamespace(t *testing.T) {
 	k8s := newTestSimpleK8s()
-	os.Setenv("POD_NAMESPACE","default")
+	os.Setenv("POD_NAMESPACE", "default")
 	ns, err := k8s.GetNamespace()
 	if err != nil {
 		t.Error("Expected result is default")
