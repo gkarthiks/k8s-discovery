@@ -15,11 +15,13 @@ import (
 	metricsClient "k8s.io/metrics/pkg/client/clientset/versioned"
 )
 
+// K8s struct holds the instance of clientset and metrics clisentset
 type K8s struct {
-	Clientset coreClient.Interface
-	MetricsClientSet   *metricsClient.Clientset
-
+	Clientset        coreClient.Interface
+	MetricsClientSet *metricsClient.Clientset
 }
+
+var logEnabled bool
 
 // NewK8s will provide a new k8s client interface
 // resolves where it is running whether inside the kubernetes cluster or outside
@@ -27,8 +29,11 @@ type K8s struct {
 // While running inside the cluster resolved via pod environment uses the in-cluster config
 func NewK8s() (*K8s, error) {
 	client := K8s{}
+	_, logEnabled = os.LookupEnv("CLIENTSET_LOG")
 	if _, inCluster := os.LookupEnv("KUBERNETES_SERVICE_HOST"); inCluster == true {
-		log.Info("Program running inside the cluster, picking the in-cluster configuration")
+		if logEnabled {
+			log.Info("Program running inside the cluster, picking the in-cluster configuration")
+		}
 
 		config, err := restClient.InClusterConfig()
 		if err != nil {
@@ -41,7 +46,9 @@ func NewK8s() (*K8s, error) {
 		return &client, nil
 	}
 
-	log.Info("Program running from outside of the cluster")
+	if logEnabled {
+		log.Info("Program running from outside of the cluster")
+	}
 	var kubeconfig *string
 	if home := homeDir(); home != "" {
 		kubeconfig = flag.String("kubeconfig", filepath.Join(home, ".kube", "config"), "(optional) absolute path to the kubeconfig file")
@@ -79,7 +86,9 @@ func (o *K8s) GetVersion() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	log.Println(version)
+	if logEnabled {
+		log.Infof("Version of running k8s %v", version)
+	}
 	return fmt.Sprintf("%s", version), nil
 }
 
@@ -93,9 +102,8 @@ func (o *K8s) GetNamespace() (string, error) {
 	if data, err := ioutil.ReadFile("/var/run/secrets/kubernetes.io/serviceaccount/namespace"); err == nil {
 		if ns := strings.TrimSpace(string(data)); len(ns) > 0 {
 			return ns, nil
-		} else {
-			return "", err
 		}
+		return "", err
 	}
 	return "", nil
 }
