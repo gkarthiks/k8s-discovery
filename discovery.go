@@ -43,6 +43,10 @@ func NewK8s() (*K8s, error) {
 		if err != nil {
 			return nil, err
 		}
+		client.MetricsClientSet, err = metricsClient.NewForConfig(config)
+		if err != nil {
+			panic(err)
+		}
 		return &client, nil
 	}
 
