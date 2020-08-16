@@ -1,5 +1,9 @@
 ## CHANGELOG
 
+### v0.18.4
+- fix for the metrics client with inCluster config
+- upgraded to 0.18.8 of k8s
+
 ### v0.18.3
 - added the logEnabled flag
 - added changelog
