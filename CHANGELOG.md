@@ -1,5 +1,8 @@
 ## CHANGELOG
 
+### v0.19.0
+- expose restClient
+
 ### v0.18.4
 - fix for the metrics client with inCluster config
 - upgraded to 0.18.8 of k8s
