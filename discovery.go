@@ -19,6 +19,7 @@ import (
 type K8s struct {
 	Clientset        coreClient.Interface
 	MetricsClientSet *metricsClient.Clientset
+	RestConfig       *restClient.Config
 }
 
 var logEnabled bool
@@ -36,6 +37,7 @@ func NewK8s() (*K8s, error) {
 		}
 
 		config, err := restClient.InClusterConfig()
+		client.RestConfig = config
 		if err != nil {
 			return nil, err
 		}
@@ -61,6 +63,7 @@ func NewK8s() (*K8s, error) {
 	}
 	flag.Parse()
 	config, err := cmdClient.BuildConfigFromFlags("", *kubeconfig)
+	client.RestConfig = config
 	if err != nil {
 		return nil, err
 	}
