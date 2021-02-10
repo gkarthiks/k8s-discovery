@@ -1,5 +1,9 @@
 ## CHANGELOG
 
+### v0.20.0
+- upgraded to v0.20.2 for k8s.io module
+- upgraded to v1.7.0 for logrus module
+
 ### v0.19.0
 - expose restClient
 
