@@ -31,7 +31,7 @@ Declare a variable as `var k8s *discovery.K8s` and initialize it as `k8s, _ = di
 <b>GetNamespace:</b> Gets the namespace of the running pod if running inside the cluster, if outside returns based on the `POD_NAMESPACE` environment variable. This environment variable also takes precedence if provided in a pod.
 
 ## Available client
-*K8s Discovery* provides the client set for kubernetes client with hassle free configuration as well as the metrics client. The new addition `MetricsClientSet` can be used to query the metrics against the containers.
+*K8s Discovery* provides the client set for kubernetes client with hassle free configuration as well as the metrics client. The `MetricsClientSet` can be used to query the metrics against the containers. There is also a `RestConfig` exposed via *discovery* to make use of the rest api.
 
 
 ## Example
