@@ -20,7 +20,7 @@ func TestGetVersionDefault(t *testing.T) {
 	if err != nil {
 		t.Fatal("getVersion should not raise an error")
 	}
-	expected := "v0.0.0-master+$Format:%h$"
+	expected := "v0.0.0-master+$Format:%H$"
 	if v != expected {
 		t.Fatal("getVersion should return " + expected)
 	}
