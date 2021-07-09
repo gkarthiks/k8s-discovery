@@ -4,6 +4,7 @@
 ![language](https://img.shields.io/badge/Language-go-blue.svg)
 [![Go Report Card](https://goreportcard.com/badge/github.com/gkarthiks/k8s-discovery)](https://goreportcard.com/report/github.com/gkarthiks/k8s-discovery)
 ![License](https://img.shields.io/github/license/gkarthiks/k8s-discovery.svg)
+[![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/5036/badge)](https://bestpractices.coreinfrastructure.org/projects/5036)
 
 ![](go-k8s.png)
 
