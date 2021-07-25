@@ -53,13 +53,6 @@ func NewK8s() (*K8s, error) {
 	return &client, nil
 }
 
-func homeDir() string {
-	if h := os.Getenv("HOME"); h != "" {
-		return h
-	}
-	return os.Getenv("USERPROFILE")
-}
-
 // GetVersion returns the version of the kubernetes cluster that is running
 func (o *K8s) GetVersion() (string, error) {
 	version, err := o.Clientset.Discovery().ServerVersion()
