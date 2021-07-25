@@ -1,11 +1,9 @@
 package discovery
 
 import (
-	"flag"
 	"fmt"
 	"io/ioutil"
 	"os"
-	"path/filepath"
 	"strings"
 
 	log "github.com/sirupsen/logrus"
@@ -31,51 +29,26 @@ var logEnabled bool
 func NewK8s() (*K8s, error) {
 	client := K8s{}
 	_, logEnabled = os.LookupEnv("CLIENTSET_LOG")
-	if _, inCluster := os.LookupEnv("KUBERNETES_SERVICE_HOST"); inCluster == true {
+
+	config, err := restClient.InClusterConfig()
+	if err != nil {
+		kubeConfig :=
+			cmdClient.NewDefaultClientConfigLoadingRules().GetDefaultFilename()
+		config, err = cmdClient.BuildConfigFromFlags("", kubeConfig)
+		if err != nil {
+			return nil, err
+		}
+		if logEnabled {
+			log.Info("Program running from outside of the cluster")
+		}
+	} else {
 		if logEnabled {
 			log.Info("Program running inside the cluster, picking the in-cluster configuration")
 		}
-
-		config, err := restClient.InClusterConfig()
-		client.RestConfig = config
-		if err != nil {
-			return nil, err
-		}
-		client.Clientset, err = coreClient.NewForConfig(config)
-		if err != nil {
-			return nil, err
-		}
-		client.MetricsClientSet, err = metricsClient.NewForConfig(config)
-		if err != nil {
-			panic(err)
-		}
-		return &client, nil
-	}
-
-	if logEnabled {
-		log.Info("Program running from outside of the cluster")
-	}
-	var kubeconfig *string
-	if home := homeDir(); home != "" {
-		kubeconfig = flag.String("kubeconfig", filepath.Join(home, ".kube", "config"), "(optional) absolute path to the kubeconfig file")
-	} else {
-		kubeconfig = flag.String("kubeconfig", "", "absolute path to the kubeconfig file")
-	}
-	flag.Parse()
-	config, err := cmdClient.BuildConfigFromFlags("", *kubeconfig)
-	client.RestConfig = config
-	if err != nil {
-		return nil, err
 	}
 	client.Clientset, err = coreClient.NewForConfig(config)
-	if err != nil {
-		return nil, err
-	}
-
 	client.MetricsClientSet, err = metricsClient.NewForConfig(config)
-	if err != nil {
-		panic(err)
-	}
+	client.RestConfig = config
 
 	return &client, nil
 }
