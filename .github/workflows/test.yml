@@ -43,4 +43,6 @@ jobs:
           go mod edit -replace github.com/gkarthiks/k8s-discovery=$GITHUB_WORKSPACE
           cat go.mod
 
+          go mod tidy
+
           go run main.go
