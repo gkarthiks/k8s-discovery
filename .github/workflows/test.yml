@@ -1,0 +1,48 @@
+name: Test k8s-discovery
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.16
+
+      - uses: balchua/microk8s-actions@v0.2.1
+        name: Create a microK8s Cluster
+        with:
+          channel: 'latest/stable'
+          addons: '["dns", "rbac", "storage", "registry", "metrics-server"]'
+
+      - name: Version Checks
+        run: |
+          kubectl version --short
+          git version
+          sleep 30s
+
+      - name: Run Self Test
+        run: |
+          go test
+
+      - name: Checkout Testing Project and run
+        run: |
+          mkdir -p $RUNNER_TEMP/testingproj-k8s-discovery
+          git clone https://github.com/gkarthiks/testingproj-k8s-discovery.git $RUNNER_TEMP/testingproj-k8s-discovery/
+
+          cd $RUNNER_TEMP/testingproj-k8s-discovery
+
+          go mod edit -replace github.com/gkarthiks/k8s-discovery=$GITHUB_WORKSPACE
+          cat go.mod
+
+          go mod tidy
+
+          go run main.go
