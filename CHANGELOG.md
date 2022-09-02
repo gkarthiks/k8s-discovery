@@ -1,5 +1,16 @@
 ## CHANGELOG
 
+### v0.25.0
+- upgraded the go version to 1.19 in sync with Kubernetes
+- upgraded the following modules
+
+| Module Name | Old Version | New Version |
+|--|--|--|
+|client-go| v0.22.2 | v0.25.0 |
+|metrics| v0.22.2| v0.25.0 |
+|testify| v1.7.0 | v1.8.0 |
+|logrus| v1.8.1 | v1.9.0 |
+
 ### v0.22.2
 - upgraded the go version to 1.16 in sync with Kubernetes
 - upgraded the following modules
