@@ -18,6 +18,8 @@ type K8s struct {
 	Clientset        coreClient.Interface
 	MetricsClientSet *metricsClient.Clientset
 	RestConfig       *restClient.Config
+	inkluster        bool
+	currentContext   string // only for out-of-kluster config
 }
 
 var logEnabled bool
@@ -28,16 +30,20 @@ var logEnabled bool
 // While running inside the cluster resolved via pod environment uses the in-cluster config
 func NewK8s() (*K8s, error) {
 	client := K8s{}
+
 	_, logEnabled = os.LookupEnv("CLIENTSET_LOG")
 
+	client.inkluster = true
 	config, err := restClient.InClusterConfig()
 	if err != nil {
+		client.inkluster = false
 		kubeConfig :=
 			cmdClient.NewDefaultClientConfigLoadingRules().GetDefaultFilename()
 		config, err = cmdClient.BuildConfigFromFlags("", kubeConfig)
 		if err != nil {
 			return nil, err
 		}
+		//client.currentContext = config.CurrentContext
 		if logEnabled {
 			log.Info("Program running from outside of the cluster")
 		}
@@ -79,4 +85,12 @@ func (o *K8s) GetNamespace() (string, error) {
 		return "", err
 	}
 	return "", nil
+}
+
+func (o *K8s) IsInKluster() bool {
+	return o.inkluster
+}
+
+func (o *K8s) CurrentContext() string {
+	return o.currentContext
 }
