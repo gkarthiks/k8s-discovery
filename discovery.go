@@ -24,7 +24,7 @@ var logEnabled bool
 
 // NewK8s will provide a new k8s client interface
 // resolves where it is running whether inside the kubernetes cluster or outside
-// While running outside of the cluster, tries to make use of the kubeconfig file
+// While running outside the cluster, tries to make use of the kubeconfig file
 // While running inside the cluster resolved via pod environment uses the in-cluster config
 func NewK8s() (*K8s, error) {
 	client := K8s{}

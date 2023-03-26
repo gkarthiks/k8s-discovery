@@ -1,5 +1,13 @@
 ## CHANGELOG
 
+### v0.26.3
+- upgraded the following modules 
+
+| Module Name | Old Version | New Version |
+|--|--|--|
+|client-go| v0.25.0 | v0.26.3 |
+|metrics| v0.25.0| v0.26.3 |
+
 ### v0.25.0
 - upgraded the go version to 1.19 in sync with Kubernetes
 - upgraded the following modules
