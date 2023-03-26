@@ -1,7 +1,8 @@
 ## CHANGELOG
 
 ### v0.26.3
-- upgraded the following moduled
+- upgraded the following modules 
+
 | Module Name | Old Version | New Version |
 |--|--|--|
 |client-go| v0.25.0 | v0.26.3 |
