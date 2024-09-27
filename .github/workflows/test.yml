@@ -15,7 +15,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v2
         with:
-          go-version: 1.19
+          go-version: 1.23
 
       - uses: balchua/microk8s-actions@v0.2.1
         name: Create a microK8s Cluster
@@ -25,7 +25,7 @@ jobs:
 
       - name: Version Checks
         run: |
-          kubectl version --short
+          kubectl version
           git version
           sleep 30s
 
