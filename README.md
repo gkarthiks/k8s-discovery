@@ -18,7 +18,7 @@ The main aspect of this is around saving and cleaning the code for in-cluster an
 Run `go get` to get the *k8s-discovery* module as follows.
 
 ```
-go get github.com/gkarthiks/k8s-discovery
+go get github.com/sysbind/k8s-discovery
 ```
 
 Declare a variable as `var k8s *discovery.K8s` and initialize it as `k8s, _ = discovery.NewK8s()`. Now the **k8s** will hold the interface that will provide the clientset for Kubernetes communication that is pulled either via `in-cluster` or via `kubeconfig` file.
