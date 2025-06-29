@@ -1,4 +1,4 @@
-module github.com/gkarthiks/k8s-discovery
+module github.com/sysbind/k8s-discovery
 
 go 1.24.0
 
