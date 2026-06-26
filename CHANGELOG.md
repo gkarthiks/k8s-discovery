@@ -1,5 +1,15 @@
 ## CHANGELOG
 
+### v0.36.2
+- upgraded the go version to 1.26 in sync with Kubernetes
+- upgraded the following modules
+
+| Module Name | Old Version | New Version |
+|--|--|--|
+|client-go| v0.35.1 | v0.36.2 |
+|metrics| v0.35.1 | v0.36.2 |
+|logrus| v1.9.3 | v1.9.4 |
+
 ### v0.26.3
 - upgraded the following modules 
 
