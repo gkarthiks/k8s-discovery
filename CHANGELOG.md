@@ -1,5 +1,19 @@
 ## CHANGELOG
 
+### v0.37.2
+- return client-construction errors from NewK8s instead of reporting success
+- upgraded the following modules and refreshed their transitive dependencies
+- retained the minimum Go version of 1.26.0
+
+| Module Name | Old Version | New Version |
+|--|--|--|
+|client-go| v0.36.2 | v0.37.2 |
+|metrics| v0.36.2 | v0.37.2 |
+|api| v0.36.2 | v0.37.2 |
+|apimachinery| v0.36.2 | v0.37.2 |
+|logrus| v1.9.4 | v1.10.2 |
+|testify| v1.11.1 | v1.12.1 |
+
 ### v0.36.2
 - upgraded the go version to 1.26 in sync with Kubernetes
 - upgraded the following modules

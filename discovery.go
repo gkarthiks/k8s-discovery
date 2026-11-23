@@ -47,7 +47,13 @@ func NewK8s() (*K8s, error) {
 		}
 	}
 	client.Clientset, err = coreClient.NewForConfig(config)
+	if err != nil {
+		return nil, fmt.Errorf("create Kubernetes client: %w", err)
+	}
 	client.MetricsClientSet, err = metricsClient.NewForConfig(config)
+	if err != nil {
+		return nil, fmt.Errorf("create metrics client: %w", err)
+	}
 	client.RestConfig = config
 
 	return &client, nil

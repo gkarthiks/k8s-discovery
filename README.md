@@ -13,29 +13,57 @@
 The main aspect of this is around saving and cleaning the code for in-cluster and out-cluster configurations. 
 
 
+## Requirements
+
+- Go 1.26.0 or newer.
+- Access to a Kubernetes cluster with permissions for the API calls your application makes.
+- A metrics API provider, such as metrics-server, and permission to list pod metrics if using the metrics example below.
+
 ## Usage
 
-Run `go get` to get the *k8s-discovery* module as follows.
+Install the module in your Go project:
 
-```
+```sh
 go get github.com/gkarthiks/k8s-discovery
 ```
 
-Declare a variable as `var k8s *discovery.K8s` and initialize it as `k8s, _ = discovery.NewK8s()`. Now the **k8s** will hold the interface that will provide the clientset for Kubernetes communication that is pulled either via `in-cluster` or via `kubeconfig` file.
+Initialize the clients and handle configuration errors:
 
-## Available APIs at the moment
+```go
+k8s, err := discovery.NewK8s()
+if err != nil {
+	log.Fatalf("Initialize Kubernetes clients: %v", err)
+}
+```
 
-<b>NewK8s:</b> Will return a new kubernetes clientset's interface that is formulated either via in-cluster configuration or kubeconfog file.
+`NewK8s()` tries in-cluster service-account configuration first. If that fails, it loads a local kubeconfig and uses its current context. Set `KUBECONFIG` to a single file to choose a specific configuration; otherwise the default is `$HOME/.kube/config`. When `KUBECONFIG` lists multiple paths, this library selects the first existing file rather than merging them.
 
-<b>GetVersion:</b> Queries the Kubernetes for the version in `v0.0.0-master+$Format:%h$`
+Client construction does not verify connectivity or API permissions. Those failures are returned by subsequent API calls.
 
-<b>GetNamespace:</b> Gets the namespace of the running pod if running inside the cluster, if outside returns based on the `POD_NAMESPACE` environment variable. This environment variable also takes precedence if provided in a pod.
+## Available APIs
 
-## Available client
-*K8s Discovery* provides the client set for kubernetes client with hassle free configuration as well as the metrics client. The `MetricsClientSet` can be used to query the metrics against the containers. There is also a `RestConfig` exposed via *discovery* to make use of the rest api.
+- **NewK8s:** Returns the Kubernetes clientset, metrics clientset, and REST configuration, or an error if configuration or client construction fails.
+- **GetVersion:** Queries the API server and returns its Kubernetes version, or a request error.
+- **GetNamespace:** Returns the non-empty `POD_NAMESPACE` environment variable first, then the trimmed contents of `/var/run/secrets/kubernetes.io/serviceaccount/namespace`. If neither is available, it returns an empty string with no error. It does not use the namespace from kubeconfig.
 
+Set `CLIENTSET_LOG` to enable configuration and version logging. The presence of the variable enables logging, even if its value is empty or `false`.
+
+## Available clients
+
+- `Clientset`: The standard Kubernetes client interface for working with resources such as Pods and CronJobs.
+- `MetricsClientSet`: The metrics client for querying pod and node resource usage.
+- `RestConfig`: The underlying `*rest.Config`, which can be used to create additional clients.
 
 ## Example
+
+Save the following as `main.go` in a Go project with this module installed. The example lists CronJobs and pod metrics in one namespace. When running locally, set `POD_NAMESPACE` explicitly, for example:
+
+```sh
+POD_NAMESPACE=default go run .
+```
+
+Your credentials need permission to list CronJobs in the `batch` API group and pods in the `metrics.k8s.io` API group in the selected namespace. Metrics queries also require an available metrics API provider.
+
 ```go
 package main
 
@@ -43,85 +71,72 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"strconv"
+	"time"
 
 	discovery "github.com/gkarthiks/k8s-discovery"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	metricsTypes "k8s.io/metrics/pkg/apis/metrics/v1beta1"
-)
-
-var (
-	k8s *discovery.K8s
 )
 
 func main() {
-	k8s, _ = discovery.NewK8s()
-	namespace, _ := k8s.GetNamespace()
-	version, _ := k8s.GetVersion()
-	fmt.Printf("Specified Namespace: %s\n", namespace)
-	fmt.Printf("Version of running Kubernetes: %s\n", version)
-	
-	
-	
-	
-	cronJobs, err := k8s.Clientset.BatchV1beta1().CronJobs(namespace).List(context.Background(), metav1.ListOptions{})
-	if err != nil {
-		log.Panic(err.Error())
+	if err := run(); err != nil {
+		log.Fatal(err)
 	}
-	for idx, crons := range cronJobs.Items {
-		fmt.Printf("%d -> %s\n", idx, crons.Name)
-	}
-	
-	
-	
-	
-	fmt.Println("==== Moving towards the metrics query ====")
-	
-	podMetrics, err := k8s.MetricsClientSet.MetricsV1beta1().PodMetricses(namespace).List(context.Background(), metav1.ListOptions{})
+}
+
+func run() error {
+	k8s, err := discovery.NewK8s()
 	if err != nil {
-		panic(err)
+		return fmt.Errorf("initialize Kubernetes clients: %w", err)
+	}
+	namespace, err := k8s.GetNamespace()
+	if err != nil {
+		return fmt.Errorf("get namespace: %w", err)
+	}
+	if namespace == "" {
+		return fmt.Errorf("namespace is empty; set POD_NAMESPACE when running locally")
+	}
+	version, err := k8s.GetVersion()
+	if err != nil {
+		return fmt.Errorf("get Kubernetes version: %w", err)
+	}
+	fmt.Printf("Namespace: %s\nKubernetes version: %s\n", namespace, version)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	cronJobs, err := k8s.Clientset.BatchV1().CronJobs(namespace).List(ctx, metav1.ListOptions{})
+	if err != nil {
+		return fmt.Errorf("list CronJobs in %s: %w", namespace, err)
+	}
+	for _, cronJob := range cronJobs.Items {
+		fmt.Printf("CronJob: %s\n", cronJob.Name)
 	}
 
-	var podMetric metricsTypes.PodMetrics
-	getPodUsageMetrics := func(pod metricsTypes.PodMetrics) {
+	podMetrics, err := k8s.MetricsClientSet.MetricsV1beta1().PodMetricses(namespace).List(ctx, metav1.ListOptions{})
+	if err != nil {
+		return fmt.Errorf("list pod metrics in %s: %w", namespace, err)
+	}
+	for _, pod := range podMetrics.Items {
 		for _, container := range pod.Containers {
-			cpuQuantityDec := container.Usage.Cpu().AsDec().String()
-			cpuUsageFloat, _ := strconv.ParseFloat(cpuQuantityDec, 64)
-
-			fmt.Printf( "CPU Usage Float: %v\n", cpuUsageFloat)
-
-			memoryQuantityDec := container.Usage.Memory().AsDec().String()
-			memoryUsageFloat, _ := strconv.ParseFloat(memoryQuantityDec, 64)
-			fmt.Printf("Memory Usage Float: %v\n\n", memoryUsageFloat)
+			fmt.Printf("Pod: %s, container: %s, CPU: %s, memory: %s\n",
+				pod.Name, container.Name,
+				container.Usage.Cpu().String(), container.Usage.Memory().String())
 		}
 	}
-
-	for _, podMetric = range podMetrics.Items {
-		getPodUsageMetrics(podMetric)
-	}
-	
-	
-	
+	return nil
 }
 ```
 
-### Note:
+The example prints Kubernetes quantities with their units, such as `100m` for CPU and `64Mi` for memory, without converting them to floating-point numbers. `MetricsV1beta1()` is the metrics API client; CronJobs use the stable `BatchV1()` API.
 
-For GCP or managed kubernetes, you have to import the `auth` module, else an error message stating `no Auth Provider found for name "gcp"` will be thrown. The import looks like the below for the sample program. Special mention @ringods.
+## Authentication
 
-```golang
-import (
-	"context"
-	"fmt"
-	"log"
-	"strconv"
+Inside a pod, the library uses the mounted service-account credentials. Grant the service account the permissions needed for your application's requests.
 
-	discovery "github.com/gkarthiks/k8s-discovery"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	metricsTypes "k8s.io/metrics/pkg/apis/metrics/v1beta1"
-	_ "k8s.io/client-go/plugin/pkg/client/auth"
-)
-```
+Outside a cluster, authentication comes from kubeconfig. For configurations using [client-go credential plugins](https://kubernetes.io/docs/reference/access-authn-authz/authentication/#client-go-credential-plugins), install the executable referenced by `users[].user.exec.command` and make it available to the application. A bare command name must be on `PATH`.
+
+For GKE, install `gke-gcloud-auth-plugin` and refresh your kubeconfig using the [GKE cluster access instructions](https://cloud.google.com/kubernetes-engine/docs/how-to/cluster-access-for-kubectl). The old blank import of `k8s.io/client-go/plugin/pkg/client/auth` does not restore the removed built-in GCP auth provider.
 
 ## Contributing
-For contributions please refer the [contributing guidelines](CONTRIBUTING.md).
+
+For contributions please refer to the [contributing guidelines](CONTRIBUTING.md).
